@@ -160,3 +160,27 @@ def ComputingFrequenciesWithMismatchesAndReverseComplements(Text, k, d):
 			j = PatternToNumber(approx)
 			frequencyArray[j] +=1
 	return frequencyArray
+
+def MotifEnumeration(Dna, k,d):
+	patterns = []
+	motifs = []
+	for i in range(0, 4**k):
+		motifs.append(0)
+	for i in range(0,len(Dna[0])-k+1):
+		kmer = Dna[0][i:i+k]
+		neighbours =  Neighbors(kmer,d)
+		for pat in neighbours:
+			motifs[PatternToNumber(pat)] = 1
+	
+	for i in range(0,len(motifs)):
+		if motifs[i] == 1:
+			motif = NumberToPattern(i,k)
+			for str in Dna[1:]:
+				for j in range(0, len(str)-k+1):
+					if HammingDistance(motif, str[j:j+k]) <= d:
+						motifs[i] += 1
+						if motifs[i] == len(Dna):
+							patterns.append(motif)
+						break
+	return patterns
+			
