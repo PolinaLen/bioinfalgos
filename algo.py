@@ -183,4 +183,26 @@ def MotifEnumeration(Dna, k,d):
 							patterns.append(motif)
 						break
 	return patterns
-			
+
+def MedianString(Dna, k):
+	median = ''
+	distance = len(Dna)//4*4
+	for i in range(0,4**k):
+		pattern = NumberToPattern(i,k)
+		score = d(pattern,Dna)
+		if distance > score:
+			distance = score
+			median = pattern
+	return median
+
+
+def d(pattern, Dna):
+	res = 0
+	for text in Dna:
+		distance = len(pattern)
+		for i in range(0,len(text)-len(pattern)+1):
+			hd = HammingDistance(pattern,text[i:i+len(pattern)])
+			if hd < distance:
+				distance = hd
+		res += distance
+	return res
