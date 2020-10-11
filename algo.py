@@ -1,3 +1,5 @@
+import math
+
 code = {'A':'T', 'T':'A', 'G':'C', 'C':'G'}
 ind = {'A':0,'C':1,'G':2,'T':3}
 sym = {0:'A',1:"C",2:'G',3:'T'}
@@ -171,7 +173,6 @@ def MotifEnumeration(Dna, k,d):
 		neighbours =  Neighbors(kmer,d)
 		for pat in neighbours:
 			motifs[PatternToNumber(pat)] = 1
-	
 	for i in range(0,len(motifs)):
 		if motifs[i] == 1:
 			motif = NumberToPattern(i,k)
@@ -185,14 +186,17 @@ def MotifEnumeration(Dna, k,d):
 	return patterns
 
 def MedianString(Dna, k):
-	median = ''
-	distance = len(Dna)//4*4
+	distance = len(Dna)+1
+	median = []
 	for i in range(0,4**k):
 		pattern = NumberToPattern(i,k)
 		score = d(pattern,Dna)
 		if distance > score:
 			distance = score
-			median = pattern
+			median = []
+			median.append(pattern)
+		if distance == score:
+			median.append(pattern)
 	return median
 
 
@@ -206,3 +210,57 @@ def d(pattern, Dna):
 				distance = hd
 		res += distance
 	return res
+
+def ProfileMostProbableKmer(text,k,profile):
+	print(profile)
+	probability = 0
+	res = ''
+	for i in range(0,len(text)-k+1):
+		pattern = text[i:i+k]
+		score = 1
+		for n in range(0,len(pattern)):
+			score *= profile[n][ind[pattern[n]]]
+		if probability < score:
+			probability = score
+			res = pattern
+	if res == '':
+		return text[0:k]
+	return res
+
+def GreedyMotifSearch(Dna, k, t):
+	bestmotifs = takefirstkmers(Dna,k,t)
+	motifs = []
+	for i in range(0,len(Dna[0])-k+1):
+		motifs.append(Dna[0][i:i+k])
+		for line in range(1,t):
+			profile = formProfile(motifs,k)
+			motifs.append(ProfileMostProbableKmer(Dna[line],k,profile))
+		if Score(motifs) < Score(bestmotifs):
+			bestmotifs = motifs
+		motifs = []
+	return bestmotifs
+
+def takefirstkmers(Dna,k,t):
+	matrix = []
+	for i in range(0,t):
+		matrix.append(Dna[i][0:k])
+	return matrix
+
+def formProfile(motifs,k):
+	profile = []
+	for i in range(0,k):
+		profile.append([0,0,0,0])
+		for motif in motifs:
+			profile[i][ind[motif[i]]] += 1/len(motifs)
+	return profile
+
+def Score(matrix):
+	profile = formProfile(matrix,len(matrix[0]))
+	motif = ''
+	for n in profile:
+		motif += sym[n.index(max(n))]
+	score = 0
+	for kmer in matrix:
+		score += HammingDistance(motif,kmer)
+	# print(score)
+	return score
